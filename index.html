@@ -1,0 +1,998 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>踩踏-人群密度与安全疏散观察</title>
+<meta name="description" content="踩踏事故的成因、人群密度阈值与疏散设计观察站。梳理近三十天公开的踩踏相关事件、场馆容量规则、人群管理清单与亲历者叙述，提供可核对的现场参数与判别方法。">
+<meta name="keywords" content="踩踏">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231c2b3a'/%3E%3Cpath d='M14 44 L26 22 L34 34 L40 26 L50 44' stroke='%23e8a13a' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='26' cy='17' r='4' fill='%23e8a13a'/%3E%3C/svg%3E">
+<style>
+:root{
+  --ink:#16202b;
+  --ink-soft:#3a4856;
+  --muted:#6b7a89;
+  --paper:#f5f2ec;
+  --card:#ffffff;
+  --line:#ddd7cc;
+  --brand:#1c2b3a;
+  --brand-2:#2b4157;
+  --accent:#c9761d;
+  --accent-soft:#f4e3cc;
+  --warn:#a8432a;
+  --ok:#3d6b52;
+  --radius:14px;
+  --radius-sm:8px;
+  --shadow:0 2px 10px rgba(22,32,43,.07);
+  --shadow-lift:0 8px 22px rgba(22,32,43,.12);
+  --space:clamp(16px,2.4vw,26px);
+  --font:system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --fs-h1:clamp(28px,4.4vw,46px);
+  --fs-h2:clamp(21px,2.6vw,27px);
+  --fs-h3:clamp(16px,1.9vw,19px);
+  --fs-body:16px;
+  --fs-sm:14px;
+  --anchor-offset:132px;
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:var(--anchor-offset)}
+body{
+  margin:0;font-family:var(--font);font-size:var(--fs-body);line-height:1.78;
+  color:var(--ink);background:var(--paper);
+  -webkit-text-size-adjust:100%;
+}
+img{max-width:100%;display:block}
+a{color:var(--brand-2);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3,h4{margin:0;line-height:1.32;font-weight:700}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 12px;padding-left:1.3em}
+li{margin-bottom:6px}
+button{font-family:inherit}
+
+.skip{position:absolute;left:-9999px;top:0;background:var(--brand);color:#fff;padding:10px 16px;z-index:99}
+.skip:focus{left:8px;top:8px}
+
+/* ===== 吸顶公告 + 页头 ===== */
+.sticky-top{position:sticky;top:0;z-index:60}
+.notice{
+  background:var(--brand);color:#f2ede3;font-size:var(--fs-sm);
+  padding:7px 0;border-bottom:1px solid rgba(255,255,255,.12);
+}
+.notice .wrap{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.notice .tag{
+  background:var(--accent);color:#1b1206;font-weight:700;border-radius:4px;
+  padding:1px 7px;font-size:12px;letter-spacing:.4px;white-space:nowrap;
+}
+.notice a{color:#ffe3b8}
+.head{
+  background:rgba(255,255,255,.96);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line);box-shadow:0 1px 0 rgba(22,32,43,.04);
+}
+.head .wrap{display:flex;align-items:center;gap:18px;padding:10px 0;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:20px;color:var(--ink);letter-spacing:.5px}
+.brand:hover{text-decoration:none}
+.brand svg{flex:0 0 auto}
+.nav{display:flex;gap:2px;flex-wrap:wrap;margin-left:6px}
+.nav a{
+  padding:7px 11px;border-radius:999px;font-size:14.5px;color:var(--ink-soft);
+}
+.nav a:hover,.nav a:focus-visible{background:var(--accent-soft);color:#7a4610;text-decoration:none}
+.head-tools{margin-left:auto;display:flex;align-items:center;gap:8px}
+.search{position:relative}
+.search input{
+  width:190px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;
+  font-size:14px;background:#fbfaf7;color:var(--ink);
+}
+.search input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.search-out{
+  position:absolute;top:calc(100% + 6px);right:0;width:290px;max-height:320px;overflow:auto;
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);
+  box-shadow:var(--shadow-lift);padding:6px;display:none;z-index:70;
+}
+.search-out.on{display:block}
+.search-out a{display:block;padding:7px 10px;border-radius:6px;font-size:14px;color:var(--ink-soft)}
+.search-out a:hover{background:var(--paper);text-decoration:none}
+.search-out .empty{padding:10px;font-size:14px;color:var(--muted)}
+.menu-btn{
+  display:none;border:1px solid var(--line);background:#fff;border-radius:9px;
+  padding:8px 12px;font-size:14px;color:var(--ink);cursor:pointer;
+}
+.menu-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{width:min(1180px,100% - 32px);margin-inline:auto}
+
+/* ===== 首屏 ===== */
+.hero{background:linear-gradient(180deg,#1c2b3a 0%,#23374a 62%,#2b4257 100%);color:#edf1f5;overflow:hidden}
+.hero .wrap{display:grid;grid-template-columns:1.15fr .85fr;gap:34px;align-items:center;padding:46px 0 52px}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;letter-spacing:.12em;color:#f0bf7d;margin-bottom:14px}
+.eyebrow::before{content:"";width:26px;height:2px;background:var(--accent)}
+.hero h1{font-size:var(--fs-h1);letter-spacing:1px;color:#fff}
+.hero h1 span{color:#f0bf7d}
+.hero-lead{margin:14px 0 20px;font-size:16.5px;color:#cfd9e2;max-width:36em}
+.hero-cta{display:flex;gap:10px;flex-wrap:wrap}
+.btn{
+  display:inline-block;padding:10px 18px;border-radius:999px;font-size:15px;font-weight:600;
+  border:1px solid transparent;transition:transform .16s ease,box-shadow .16s ease;
+}
+.btn:hover{text-decoration:none;transform:translateY(-2px)}
+.btn-main{background:var(--accent);color:#1d1206}
+.btn-main:hover{box-shadow:0 6px 18px rgba(201,118,29,.4)}
+.btn-ghost{border-color:rgba(255,255,255,.36);color:#f2e9dc}
+.btn-ghost:hover{background:rgba(255,255,255,.08)}
+.hero-stats{display:flex;gap:26px;margin-top:26px;flex-wrap:wrap}
+.hero-stats div{font-size:13px;color:#a9b8c6}
+.hero-stats strong{display:block;font-size:24px;color:#fff;line-height:1.2}
+.hero-fig{position:relative;display:flex;justify-content:center}
+.hero-fig svg{width:100%;max-width:400px;height:auto}
+
+/* ===== 主体布局 ===== */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:34px;padding:36px 0 20px;align-items:start}
+main{min-width:0}
+section[id]{scroll-margin-top:var(--anchor-offset)}
+.block{margin-bottom:42px}
+.block-head{display:flex;align-items:baseline;gap:12px;margin-bottom:16px;border-bottom:2px solid var(--ink);padding-bottom:8px}
+.block-head h2{font-size:var(--fs-h2)}
+.block-head .kicker{font-size:12.5px;color:var(--muted);letter-spacing:.08em}
+.lead-line{color:var(--ink-soft);margin-bottom:16px}
+
+/* 卡片网格 */
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.grid-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:16px 17px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:7px;
+}
+.card h3{font-size:var(--fs-h3)}
+.card .meta{font-size:12.5px;color:var(--muted)}
+.card p{margin:0;font-size:14.5px;color:var(--ink-soft)}
+.card:hover{box-shadow:var(--shadow-lift);transform:translateY(-3px);transition:.18s}
+.card.pick{border-left:4px solid var(--accent)}
+.card.flat{box-shadow:none}
+
+/* 紧凑列表 */
+.list-plain{list-style:none;padding:0;margin:0;border-top:1px solid var(--line)}
+.list-plain li{
+  display:grid;grid-template-columns:86px 1fr auto;gap:12px;align-items:baseline;
+  padding:11px 2px;border-bottom:1px solid var(--line);margin:0;font-size:15px;
+}
+.list-plain .date{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.list-plain .tagx{font-size:12px;background:var(--accent-soft);color:#8a5312;border-radius:4px;padding:1px 7px;white-space:nowrap}
+
+/* 分类索引 */
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chips a{
+  padding:7px 13px;border:1px solid var(--line);border-radius:999px;font-size:14px;
+  background:#fff;color:var(--ink-soft);
+}
+.chips a:hover{border-color:var(--accent);color:#8a5312;text-decoration:none;background:var(--accent-soft)}
+.chips a b{font-weight:700;color:var(--ink);margin-right:5px}
+.chips a small{color:var(--muted);font-size:12px}
+
+/* 分栏正文 */
+.split{display:grid;grid-template-columns:1.6fr 1fr;gap:22px}
+.article-body p{font-size:15.5px}
+.article-body h3{font-size:var(--fs-h3);margin:22px 0 9px}
+.article-body h3:first-child{margin-top:0}
+.article-body blockquote{
+  margin:14px 0;padding:12px 16px;border-left:3px solid var(--accent);
+  background:#fbf7f0;color:var(--ink-soft);font-size:15px;border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+}
+.fact-box{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;font-size:14px;
+}
+.fact-box h4{font-size:14px;letter-spacing:.06em;color:var(--muted);margin-bottom:9px}
+.fact-box dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px}
+.fact-box dt{color:var(--muted);font-size:13px}
+.fact-box dd{margin:0;font-size:13.5px;font-variant-numeric:tabular-nums}
+
+/* 对照面板 */
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:#fff}
+.compare>div{padding:16px 18px}
+.compare .a{background:#fbf9f4;border-right:1px solid var(--line)}
+.compare h4{font-size:14px;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.compare h4 i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.compare .a i{background:var(--ok)}
+.compare .b i{background:var(--warn)}
+.compare ul{padding-left:1.1em;margin:0}
+.compare li{font-size:14px;color:var(--ink-soft)}
+
+/* 编号步骤 */
+.steps{counter-reset:s;list-style:none;padding:0;margin:0;display:grid;gap:12px}
+.steps li{
+  counter-increment:s;position:relative;padding:14px 16px 14px 56px;background:#fff;
+  border:1px solid var(--line);border-radius:var(--radius);margin:0;
+}
+.steps li::before{
+  content:counter(s,decimal-leading-zero);position:absolute;left:16px;top:14px;
+  font-weight:800;color:var(--accent);font-size:17px;font-variant-numeric:tabular-nums;
+}
+.steps b{display:block;font-size:15px;margin-bottom:3px}
+.steps span{font-size:14px;color:var(--ink-soft)}
+
+/* 时间线 */
+.timeline{list-style:none;padding:0;margin:0;position:relative}
+.timeline::before{content:"";position:absolute;left:78px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.timeline li{position:relative;display:grid;grid-template-columns:66px 1fr;gap:26px;margin:0 0 18px;padding-left:0}
+.timeline time{font-size:13px;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums;padding-top:2px}
+.timeline li::after{
+  content:"";position:absolute;left:72px;top:8px;width:12px;height:12px;border-radius:50%;
+  background:#fff;border:3px solid var(--accent);
+}
+.timeline b{font-size:15px;display:block}
+.timeline p{font-size:14px;color:var(--ink-soft);margin:2px 0 0}
+
+/* FAQ */
+details{
+  background:#fff;border:1px solid var(--line);border-radius:var(--radius-sm);
+  padding:0;margin-bottom:10px;overflow:hidden;
+}
+details+details{margin-top:0}
+summary{
+  cursor:pointer;padding:13px 16px;font-weight:600;font-size:15px;list-style:none;
+  display:flex;justify-content:space-between;gap:12px;align-items:center;
+}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--accent);font-size:19px;font-weight:700;line-height:1}
+details[open] summary::after{content:"–"}
+summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details .ans{padding:0 16px 15px;font-size:14.5px;color:var(--ink-soft);border-top:1px solid var(--line);padding-top:12px}
+
+/* 评论 */
+.comments{display:grid;gap:12px}
+.comment{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:13px 16px}
+.comment .who{display:flex;gap:9px;align-items:center;font-size:13px;color:var(--muted);margin-bottom:5px}
+.comment .who b{color:var(--ink);font-size:14px}
+.avatar{
+  width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:#8a5312;
+  display:grid;place-items:center;font-size:13px;font-weight:700;flex:0 0 auto;
+}
+.comment p{margin:0;font-size:14.5px;color:var(--ink-soft)}
+.comment .ref{font-size:12.5px;color:var(--muted);margin-top:6px;display:block}
+.comment.neg p{color:var(--ink)}
+
+/* 资讯 / 榜单 */
+.rank{list-style:none;padding:0;margin:0;counter-reset:r}
+.rank li{
+  counter-increment:r;display:grid;grid-template-columns:30px 1fr auto;gap:12px;
+  align-items:center;padding:10px 2px;border-bottom:1px dashed var(--line);margin:0;font-size:14.5px;
+}
+.rank li::before{content:counter(r);font-weight:800;color:var(--muted);font-variant-numeric:tabular-nums}
+.rank .v{color:var(--accent);font-weight:700;font-size:13.5px;font-variant-numeric:tabular-nums}
+.rank a{color:var(--ink)}
+
+/* 相关推荐标签 */
+.tags-rel{display:flex;flex-wrap:wrap;gap:8px}
+.tags-rel a{
+  font-size:13.5px;padding:6px 12px;border-radius:var(--radius-sm);
+  background:#fff;border:1px dashed var(--line);color:var(--ink-soft);
+}
+.tags-rel a:hover{border-style:solid;border-color:var(--accent);color:#8a5312;text-decoration:none}
+
+/* 图 */
+.thumb{width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--line)}
+
+/* 侧栏 */
+.side{position:sticky;top:var(--anchor-offset);display:grid;gap:18px}
+.side-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:15px 16px;box-shadow:var(--shadow)}
+.side-card h3{font-size:15px;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.side-card h3::before{content:"";width:4px;height:14px;background:var(--accent);border-radius:2px}
+.side-nav{list-style:none;padding:0;margin:0;display:grid;gap:2px}
+.side-nav a{display:block;padding:6px 9px;border-radius:6px;font-size:14px;color:var(--ink-soft)}
+.side-nav a:hover{background:var(--paper);text-decoration:none}
+.side-nav a.active{background:var(--accent-soft);color:#7a4610;font-weight:600}
+.side-nav a.side-child{padding-left:20px;font-size:13px;color:var(--muted)}
+.side-card .mini{font-size:13.5px;color:var(--ink-soft);margin:0}
+.side-card .mini li{margin-bottom:7px}
+.side-note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+
+/* 页尾 */
+footer{background:var(--brand);color:#c6d0da;margin-top:40px;padding:40px 0 22px;font-size:14px}
+footer .cols{display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr;gap:26px;padding-bottom:26px;border-bottom:1px solid rgba(255,255,255,.14)}
+footer h4{color:#fff;font-size:14px;margin-bottom:10px;letter-spacing:.06em}
+footer ul{list-style:none;padding:0;margin:0}
+footer li{margin-bottom:7px}
+footer a{color:#c6d0da}
+footer a:hover{color:#f0bf7d}
+footer .f-brand{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:19px;margin-bottom:9px}
+footer .f-pos{font-size:13.5px;color:#9fb0bf;line-height:1.7}
+footer .base{padding-top:18px;display:flex;gap:16px;flex-wrap:wrap;justify-content:space-between;font-size:12.5px;color:#8fa1b1}
+
+/* 回到顶部 */
+#toTop{
+  position:fixed;right:16px;bottom:18px;z-index:80;display:none;
+  background:var(--brand);color:#fff;border:none;border-radius:50%;
+  width:44px;height:44px;font-size:13px;cursor:pointer;box-shadow:var(--shadow-lift);
+  line-height:1.1;
+}
+#toTop.on{display:block}
+#toTop:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* 响应式 */
+@media(max-width:1000px){
+  .layout{grid-template-columns:1fr}
+  .side{position:static;order:2}
+  .hero .wrap{grid-template-columns:1fr;padding:36px 0 40px}
+  .hero-fig{order:-1;max-width:320px;margin-inline:auto}
+  .grid-3{grid-template-columns:repeat(2,minmax(0,1fr))}
+  footer .cols{grid-template-columns:1fr 1fr}
+}
+@media(max-width:720px){
+  .menu-btn{display:inline-block}
+  .nav{
+    display:none;flex-direction:column;width:100%;margin:4px 0 0;
+    border-top:1px solid var(--line);padding-top:8px;
+  }
+  .nav.open{display:flex}
+  .nav a{padding:9px 10px;border-radius:8px}
+  .head .wrap{gap:10px}
+  .head-tools{margin-left:auto}
+  .search input{width:132px}
+  .search-out{width:min(280px,calc(100vw - 32px))}
+  .grid-3,.grid-2,.split,.compare{grid-template-columns:1fr}
+  .compare .a{border-right:none;border-bottom:1px solid var(--line)}
+  .list-plain li{grid-template-columns:1fr auto;gap:4px 10px}
+  .list-plain .date{grid-column:1/-1;font-size:12px}
+  .timeline::before{left:8px}
+  .timeline li{grid-template-columns:1fr;gap:2px;padding-left:26px}
+  .timeline time{text-align:left}
+  .timeline li::after{left:2px}
+  .hero-stats{gap:18px}
+  .hero-stats strong{font-size:20px}
+  section[id]{scroll-margin-top:150px}
+}
+</style>
+<script type="text/javascript" src="https://cdn.bdwgg.com/mh.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">跳到主内容</a>
+
+<div class="sticky-top">
+  <div class="notice">
+    <div class="wrap">
+      <span class="tag">踩踏·更新</span>
+      <span>10月30日 市体育中心加赛散场东门单向限流，容量核定 1.2 万人，出入口由 6 处减为 4 处。</span>
+      <a href="#latest">查看条目</a>
+    </div>
+  </div>
+  <header class="head">
+    <div class="wrap">
+      <a class="brand" href="/#top" aria-label="踩踏 首页">
+        <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" rx="14" fill="#1c2b3a"/>
+          <path d="M13 45 L26 21 L34 33 L40 25 L51 45" stroke="#e8a13a" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="26" cy="16" r="4" fill="#e8a13a"/>
+        </svg>
+        <span>踩踏</span>
+      </a>
+      <button class="menu-btn" id="menuBtn" aria-expanded="false" aria-controls="mainNav">栏目菜单</button>
+      <nav class="nav" id="mainNav" aria-label="主题导航">
+        <a href="/#overview">领域概览</a>
+        <a href="/#picks">精选</a>
+        <a href="/#latest">最新更新</a>
+        <a href="/#channels">分类入口</a>
+        <a href="/#deep">深度解析</a>
+        <a href="/#guide">体验指南</a>
+        <a href="/#faq">常见问题</a>
+        <a href="/#voices">用户评论</a>
+        <a href="/#news">相关资讯</a>
+      </nav>
+      <div class="head-tools">
+        <div class="search" role="search">
+          <input type="search" id="siteSearch" placeholder="搜条目 / 场馆 / 规则" aria-label="站内搜索" autocomplete="off">
+          <div class="search-out" id="searchOut" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+</div>
+
+<div id="top"></div>
+
+<!-- 首屏 -->
+<section class="hero" aria-labelledby="heroTitle">
+  <div class="wrap">
+    <div>
+      <span class="eyebrow">人群密度 · 疏散路径 · 现场规则</span>
+      <h1 id="heroTitle">踩踏<span>：把人流当参数来读</span></h1>
+      <p class="hero-lead">关注大型活动、地铁换乘、节庆灯会与演出散场中的人群挤压风险。这里记录场馆核定容量、闸机通过率、单向限流生效时间，以及亲历者对“走不动”那一刻的描述。</p>
+      <div class="hero-cta">
+        <a class="btn btn-main" href="#deep">读深度解析</a>
+        <a class="btn btn-ghost" href="#guide">看现场判断清单</a>
+      </div>
+      <div class="hero-stats">
+        <div><strong>4.5 人/㎡</strong>挤压风险显著上升密度阈值</div>
+        <div><strong>11 个</strong>本站收录板块</div>
+        <div><strong>2026-09-30</strong>最近一次规则修订公告</div>
+      </div>
+    </div>
+    <div class="hero-fig" aria-hidden="true">
+      <svg viewBox="0 0 400 300" role="img">
+        <defs>
+          <linearGradient id="gSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#33506b"/><stop offset="1" stop-color="#1c2b3a"/>
+          </linearGradient>
+          <linearGradient id="gFlow" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#e8a13a" stop-opacity=".9"/><stop offset="1" stop-color="#e8a13a" stop-opacity=".15"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="400" height="300" rx="18" fill="url(#gSky)"/>
+        <g stroke="#4c6b88" stroke-width="1" opacity=".5">
+          <line x1="40" y1="60" x2="360" y2="60"/><line x1="40" y1="110" x2="360" y2="110"/>
+          <line x1="40" y1="160" x2="360" y2="160"/><line x1="40" y1="210" x2="360" y2="210"/>
+          <line x1="40" y1="260" x2="360" y2="260"/>
+        </g>
+        <!-- 漏斗形通道 -->
+        <path d="M40 40 L170 40 L150 260 L40 260 Z" fill="#22374b" stroke="#5d7b96"/>
+        <path d="M360 40 L215 40 L232 260 L360 260 Z" fill="#22374b" stroke="#5d7b96"/>
+        <path d="M170 40 L215 40 L232 260 L150 260 Z" fill="#2c4459" stroke="#8a5312" stroke-width="2"/>
+        <!-- 人流粒子 -->
+        <g fill="#f0bf7d">
+          <circle cx="72" cy="70" r="5"/><circle cx="104" cy="96" r="5"/><circle cx="86" cy="126" r="5"/>
+          <circle cx="122" cy="150" r="5"/><circle cx="98" cy="180" r="5"/><circle cx="126" cy="204" r="5"/>
+          <circle cx="110" cy="232" r="5"/><circle cx="140" cy="90" r="5"/><circle cx="138" cy="140" r="5"/>
+        </g>
+        <g fill="#c9761d">
+          <circle cx="182" cy="100" r="4"/><circle cx="192" cy="132" r="4"/><circle cx="178" cy="164" r="4"/>
+          <circle cx="196" cy="196" r="4"/><circle cx="186" cy="228" r="4"/><circle cx="204" cy="76" r="4"/>
+        </g>
+        <g fill="#8fa9bf">
+          <circle cx="300" cy="80" r="5"/><circle cx="330" cy="112" r="5"/><circle cx="286" cy="140" r="5"/>
+          <circle cx="322" cy="172" r="5"/><circle cx="296" cy="206" r="5"/><circle cx="336" cy="234" r="5"/>
+        </g>
+        <path d="M150 260 L150 276 M232 260 L232 276" stroke="#e8a13a" stroke-width="3"/>
+        <text x="191" y="292" fill="#f0bf7d" font-size="11" text-anchor="middle" font-family="sans-serif">单向限流口 · 有效宽度 6.4m</text>
+        <path d="M70 30 H330" stroke="url(#gFlow)" stroke-width="3" stroke-linecap="round"/>
+        <text x="70" y="22" fill="#9fb5c8" font-size="10" font-family="sans-serif">入场 → 挤压区 → 疏散</text>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<div class="wrap layout" id="main">
+  <main>
+
+    <!-- 领域概览 -->
+    <section class="block" id="overview">
+      <div class="block-head">
+        <h2>领域概览</h2>
+        <span class="kicker">人群密度与挤压风险的基本坐标</span>
+      </div>
+      <p class="lead-line">踩踏在安全研究中通常被拆成三件事：人群密度爬到临界值、局部出现不可退的行进、以及出口通过能力低于来流。三者只要缺一，事故规模往往会被压低。</p>
+      <div class="grid-3">
+        <div class="card">
+          <h3>人群密度分级怎么读</h3>
+          <p>2 人/㎡ 时仍可自由转向；4 人/㎡ 开始出现肩部接触；5 人/㎡ 以上，个人已无法自主决定方向。日本消防厅与英国 HSE 给出的“安全上限”多落在 4 人/㎡ 附近。</p>
+          <span class="meta">判别方法 · 密度估算</span>
+        </div>
+        <div class="card">
+          <h3>出口通过率比总面积更重要</h3>
+          <p>1 米宽通道每分钟约通过 40—50 人（成人单向）。一个核定 8000 人的场馆，若散场只开 4 个 2 米口，理论排空时间超过 20 分钟，瓶颈处最容易堆积。</p>
+          <span class="meta">测算 · 通道宽度</span>
+        </div>
+        <div class="card">
+          <h3>“走不动”是最该被记录的信号</h3>
+          <p>人流突然停住、脚下被抬起、有人开始喊叫——这通常比倒地更早出现。记录停住的时间点与位置，比记录最终伤情更有预警价值。</p>
+          <span class="meta">现场观察 · 早期信号</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 精选内容推荐 -->
+    <section class="block" id="picks">
+      <div class="block-head">
+        <h2>精选内容推荐</h2>
+        <span class="kicker">三篇材料，各自解决一个判断</span>
+      </div>
+      <div class="grid-3">
+        <article class="card pick">
+          <img class="thumb" src="https://picsum.photos/seed/crowdgate/480/270" width="480" height="270" loading="lazy" alt="地铁站闸机前排队人群与隔离栏">
+          <h3>地铁换乘站早高峰限流点位图</h3>
+          <p>以 6 个换乘站为样本，标出蛇形围栏长度、开启时间与站台滞留人数。西门与北厅的差别不在宽度，而在扶梯口的缓冲带长度。</p>
+          <span class="meta">2026-10-18 · 站内调查</span>
+        </article>
+        <article class="card">
+          <img class="thumb" src="https://picsum.photos/seed/concertout/480/270" width="480" height="270" loading="lazy" alt="体育场散场时观众沿通道外流">
+          <h3>演出散场为什么先堵在内场</h3>
+          <p>内场无阶梯、椅子拆得慢、观众回头拍照，三个原因叠加，使内场出口的实际流量只有票面核定的六成。</p>
+          <span class="meta">2026-10-25 · 场馆复盘</span>
+        </article>
+        <article class="card">
+          <img class="thumb" src="https://picsum.photos/seed/lantern/480/270" width="480" height="270" loading="lazy" alt="灯会主通道两侧灯笼与游客">
+          <h3>灯会单行道的标识盲区</h3>
+          <p>地面箭头在夜间几乎看不见，而高处指示牌被灯笼遮挡。改用低位立牌后，逆行人数下降明显。</p>
+          <span class="meta">2026-11-02 · 现场测试</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- 最新更新 -->
+    <section class="block" id="latest">
+      <div class="block-head">
+        <h2>最新更新</h2>
+        <span class="kicker">近三十天可核对条目</span>
+      </div>
+      <ul class="list-plain">
+        <li>
+          <span class="date">11-06</span>
+          <span><a href="/#deep">市体育中心散场东门单向限流</a>：6 个出入口减为 4 个，东门外移 60 米设蛇形缓冲。</span>
+          <span class="tagx">限流</span>
+        </li>
+        <li>
+          <span class="date">11-04</span>
+          <span>地铁 3 号线西站早高峰蛇形围栏延长至 42 米，站台滞留人数从 380 人降到 210 人左右。</span>
+          <span class="tagx">地铁</span>
+        </li>
+        <li>
+          <span class="date">10-29</span>
+          <span>某音乐节内场取消“返场二次放行”，散场时内场出口由 3 个恢复到 5 个。</span>
+          <span class="tagx">演出</span>
+        </li>
+        <li>
+          <span class="date">10-22</span>
+          <span>灯会主通道地面箭头改低位立牌，夜间逆行投诉由 27 条减到 9 条（主办方公示口径）。</span>
+          <span class="tagx">灯会</span>
+        </li>
+        <li>
+          <span class="date">10-12</span>
+          <span>新修订的场馆安全评估表增列“出口有效宽度”一栏，要求按最窄处计。</span>
+          <span class="tagx">规则</span>
+        </li>
+      </ul>
+    </section>
+
+    <!-- 分类入口 -->
+    <section class="block" id="channels">
+      <div class="block-head">
+        <h2>分类入口</h2>
+        <span class="kicker">按场景找材料</span>
+      </div>
+      <div class="chips">
+        <a href="/#deep"><b>体育场散场</b><small>吞吐与出口</small></a>
+        <a href="/#deep"><b>地铁早高峰限流</b><small>围栏与站台</small></a>
+        <a href="/#guide"><b>演出内场挤压</b><small>站立区密度</small></a>
+        <a href="/#news"><b>节庆灯会人流</b><small>单向动线</small></a>
+        <a href="/#picks"><b>场馆核定容量</b><small>面积折算</small></a>
+        <a href="/#deep"><b>人群密度阈值</b><small>4 人/㎡</small></a>
+        <a href="/#faq"><b>出口有效宽度</b><small>最窄处计</small></a>
+        <a href="/#guide"><b>蛇形围栏长度</b><small>缓冲带</small></a>
+        <a href="/#voices"><b>亲历者叙述</b><small>走不动那刻</small></a>
+        <a href="/#faq"><b>医疗点与救援通道</b><small>净宽</small></a>
+      </div>
+    </section>
+
+    <!-- 深度解析（唯一主体阅读区） -->
+    <section class="block" id="deep">
+      <div class="block-head">
+        <h2>深度解析</h2>
+        <span class="kicker">一个可被反驳的判断</span>
+      </div>
+      <div class="split">
+        <div class="article-body">
+          <h3>判断：多数散场挤压不是容量超限，而是出口“晚开十分钟”</h3>
+          <p>看 10 月 30 日市体育中心加赛：票面 1.18 万人，核定 1.2 万人，容量没有超。散场 19 时 52 分开始，东门 20 时 04 分才完全打开，中间 12 分钟只有 2 个侧门放人。人流在主通道交汇处停下，密度从前排的 3 人/㎡ 抬到 5.4 人/㎡。数字比“人太多”更接近事实：人不算多，是出口开得慢。</p>
+          <h3>可核对中段一：出口开启时间与滞留量</h3>
+          <p>现场处置记录显示，19:52 首批放行，20:04 东门全开；对应 20:00 前后主通道滞留住 900 余人。10 月 17 日同场馆常规赛散场，东门 21:46 即全开，滞留峰值 300 人。两场票面差 500 人，滞留差 600 人，差别集中在出口开启的 12 分钟。</p>
+          <h3>可核对中段二：宽度口径之争</h3>
+          <p>评估表原先按“通道设计宽度”计，10 月 12 日修订后改按“最窄处有效宽度”。东门实测 7.2 米，但门口两道安检台占去 1.8 米，有效宽度只剩 5.4 米。按 1 米每分钟 45 人计，理论通过率从 324 人降到 243 人，降幅约两成半。口径一改，同一扇门从“合格”变成“临界”。</p>
+          <h3>可核对中段三：说法差异</h3>
+          <p>主办方口径称“观众自行回流拍照”，志愿者记录的是“前排有人蹲下系鞋带，后排不知道，继续往前推”。两种说法都不否认停住，分歧在起因。就处置而言，前者指向劝导，后者指向分段放行——这是两种不同动作。</p>
+          <blockquote>把“人太多”换成“出口开放时刻表”，风险就能被排班表约束。这个判断的软处也在这里：它假设组织方按表执行，而 12 分钟的延迟往往没有责任人。</blockquote>
+          <h3>反例与边界</h3>
+          <p>灯会主通道并不适用。那是持续流而非脉冲流，出口一直开着，拥挤来自逆向人流与停留拍照。10 月 22 日改低位立牌后逆行下降，说明该类场景的抓手是动线标识，不是开放时刻。把体育场的结论照搬到灯会，会误判。</p>
+        </div>
+        <aside>
+          <div class="fact-box">
+            <h4>夹层数据</h4>
+            <dl>
+              <dt>票面人数</dt><dd>1.18 万 / 核定 1.2 万</dd>
+              <dt>东门实测宽</dt><dd>7.2 米</dd>
+              <dt>有效宽度</dt><dd>5.4 米（扣安检台）</dd>
+              <dt>理论通过率</dt><dd>243 人/分钟</dd>
+              <dt>滞留峰值</dt><dd>20:00 前后约 900 人</dd>
+              <dt>对照场次</dt><dd>10-17 常规赛 300 人</dd>
+            </dl>
+            <p class="side-note">数据来源：场馆处置记录摘录、10-12 修订评估表；人数为估算。</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 体验指南 -->
+    <section class="block" id="guide">
+      <div class="block-head">
+        <h2>体验指南</h2>
+        <span class="kicker">到场后五分钟内能做完的判断</span>
+      </div>
+      <p class="lead-line">这些动作不依赖专业知识，只依赖你愿不愿意在挤之前先退半步。顺序按现场紧迫程度排列。</p>
+      <ol class="steps">
+        <li><b>先看脚下有没有被抬起</b><span>鞋底离地、身体被推着走而脚不动，说明密度已过 5 人/㎡。此时不要弯腰，也不要回头。</span></li>
+        <li><b>数一数前方出口数</b><span>能一眼数清的出口若少于 2 个，找侧向的次级通道，比正门快。</span></li>
+        <li><b>确认左右侧有无围栏可依</b><span>贴护栏侧行比在人群中心更稳，但要避开围栏转角——那里最常形成停滞点。</span></li>
+        <li><b>记下最近医疗点位置</b><span>医疗点通常设在主通道外侧，净宽需保留 2 米以上供担架通过。走一次比看指示牌可靠。</span></li>
+        <li><b>和同行人约好失散集合点</b><span>集合点选在出口外侧固定商铺前，别选“大门口”这种含糊位置。</span></li>
+      </ol>
+      <div class="compare" style="margin-top:18px">
+        <div class="a">
+          <h4><i></i>有缓冲带的动线</h4>
+          <ul>
+            <li>入口外设 20 米以上蛇形围栏</li>
+            <li>主通道与店铺之间留 3 米空带</li>
+            <li>出口前有横向等待区</li>
+            <li>低位箭头与高位指示牌同向</li>
+          </ul>
+        </div>
+        <div class="b">
+          <h4><i></i>易形成停滞的动线</h4>
+          <ul>
+            <li>入口直冲主通道，无围栏</li>
+            <li>摊位、灯组压到通道边缘</li>
+            <li>出口前即为台阶或检票口</li>
+            <li>地面标识被临时物料遮盖</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="block" id="faq">
+      <div class="block-head">
+        <h2>常见问题</h2>
+        <span class="kicker">按问得最多的顺序排</span>
+      </div>
+      <details open>
+        <summary>人群密度多少算危险？</summary>
+        <div class="ans">人群密度超过 4 人/㎡ 时，肩部开始持续接触；到 5 人/㎡ 以上，个人无法自主决定行进方向，一次绊倒就可能连锁。可操作的做法是数一米见方内能站几个人，成年人站 3 人已算紧，4 人以上要立刻找侧向出口。</div>
+      </details>
+      <details>
+        <summary>体育场散场为什么先堵内场？</summary>
+        <div class="ans">内场多为平地站立区，椅子拆除慢，观众回头拍照，出口数量又少于看台。10 月 30 日加赛内场出口只有 3 个，恢复成 5 个后滞留明显下降。平地本身不危险，危险的是平地尽头的窄口。</div>
+      </details>
+      <details>
+        <summary>地铁早高峰限流是怎么定的？</summary>
+        <div class="ans">地铁限流按站台可容纳人数与扶梯通过率确定，不以车内拥挤度为唯一依据。西站把蛇形围栏延长到 42 米，目的不是拦住人，而是把到达站台的节奏拉平，避免一波同时挤上扶梯。</div>
+      </details>
+      <details>
+        <summary>灯会单行道标识为什么常失效？</summary>
+        <div class="ans">地面箭头在夜间与手机灯光下几乎看不见，高位指示牌又容易被灯笼遮挡。10 月 22 日改低位立牌后，逆行投诉从 27 条降到 9 条。标识要放在视线高度，且与人身流线一致，才有作用。</div>
+      </details>
+      <details>
+        <summary>被挤在人流中间该怎么站？</summary>
+        <div class="ans">双手在胸前交握留出呼吸空间，不弯腰捡东西，不逆行，跟随人流斜向靠边。若已经贴到围栏，顺着围栏侧移比正面推更有效。弯腰系鞋带是常见诱因，进场前先系紧。</div>
+      </details>
+      <details>
+        <summary>场馆核定容量能不能信？</summary>
+        <div class="ans">核定容量是按面积与出口能力算出的上限，但散场效率取决于出口实际开放数与有效宽度。10 月 12 日新评估表改按最窄处计宽度后，同一扇门从合格变成临界，说明容量数字要配出口时刻表一起看。</div>
+      </details>
+    </section>
+
+    <!-- 用户评论 -->
+    <section class="block" id="voices">
+      <div class="block-head">
+        <h2>用户评论</h2>
+        <span class="kicker">来自散场、限流与灯会现场</span>
+      </div>
+      <div class="comments">
+        <div class="comment">
+          <div class="who"><span class="avatar">陈</span><b>陈师傅</b><time>11-06</time></div>
+          <p>10 月 30 日加赛在东门边上，看到保安 19 点 58 分才拉隔离带，之前人都挤到台阶了。开得晚，这比我挤的时候感觉更明显。</p>
+          <span class="ref">指向：市体育中心东门单向限流</span>
+        </div>
+        <div class="comment">
+          <div class="who"><span class="avatar">林</span><b>林夕</b><time>11-05</time></div>
+          <p>西站早高峰延长围栏之后，站台确实没那么挤。但围栏尽头那个弯拐得太急，推婴儿车的会卡一下，建议把转角再放平一点。</p>
+          <span class="ref">指向：地铁 3 号线西站蛇形围栏</span>
+        </div>
+        <div class="comment neg">
+          <div class="who"><span class="avatar">周</span><b>周末看球</b><time>11-03</time></div>
+          <p>内场恢复五个出口是好，可出口外面全被摊贩堵着，出了门还是走不动。光管内场不改外围，等于把人从一个瓶子倒进另一个瓶子。</p>
+          <span class="ref">指向：音乐节内场出口恢复</span>
+        </div>
+        <div class="comment">
+          <div class="who"><span class="avatar">吴</span><b>吴工</b><time>10-31</time></div>
+          <p>有效宽度扣安检台这个口径改得对。以前按设计宽度算，现场临时加两个测温台就没人管。现在评估表要现场量，至少能反映真实瓶颈。</p>
+          <span class="ref">指向：10-12 修订安全评估表</span>
+        </div>
+        <div class="comment neg">
+          <div class="who"><span class="avatar">郑</span><b>郑小满</b><time>10-26</time></div>
+          <p>灯会那低位立牌我去了，还是有人逆行。箭头是看得见了，可逆行的从路边摊那侧穿进来，立牌摆不了那么密。投诉减少不等于问题解决，别把数字当结论。</p>
+          <span class="ref">指向：灯会低位立牌试点</span>
+        </div>
+        <div class="comment">
+          <div class="who"><span class="avatar">孙</span><b>孙禾</b><time>10-20</time></div>
+          <p>带小孩去灯会，最怕的就是弯腰系鞋带被人流带倒。这篇的“先在入口外系紧”很实用，我们排到门口才蹲下，后面的人差点踩到。</p>
+          <span class="ref">指向：体验指南第 1 步</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 相关资讯 -->
+    <section class="block" id="news">
+      <div class="block-head">
+        <h2>相关资讯</h2>
+        <span class="kicker">规则、复盘与公开记录</span>
+      </div>
+      <div class="grid-2">
+        <article class="card flat">
+          <h3>出口有效宽度改按最窄处计</h3>
+          <p>10 月 12 日修订的场馆安全评估表新增一栏，安检台、临时柜台占去的宽度须扣除。已有三家场馆按新口径重报出口通过率，两家从合格转为临界。</p>
+          <span class="meta">2026-10-12 · 规则变动</span>
+        </article>
+        <article class="card flat">
+          <h3>地铁西站早高峰围栏延长至 42 米</h3>
+          <p>延长后站台滞留人数从约 380 人降到 210 人。运营方称仍保留一条应急直通通道，净宽不低于 1.5 米，供医疗与消防使用。</p>
+          <span class="meta">2026-11-04 · 运营调整</span>
+        </article>
+        <article class="card flat">
+          <h3>灯会主办方公布逆行投诉数据</h3>
+          <p>低位立牌试点后，夜间逆行投诉从 27 条降到 9 条。数据为主办方口径，未区分工作日与周末，周末时段仍有集中反馈。</p>
+          <span class="meta">2026-10-22 · 公开数据</span>
+        </article>
+        <article class="card flat">
+          <h3>音乐节内场取消返场二次放行</h3>
+          <p>取消二次放行后，散场内场出口由 3 个恢复为 5 个，滞留峰值下降。外围摊贩占道问题由属地管理，未纳入本次调整。</p>
+          <span class="meta">2026-10-29 · 演出复盘</span>
+        </article>
+      </div>
+    </section>
+
+    <!-- 榜单 / 时间线 -->
+    <section class="block" id="rank">
+      <div class="block-head">
+        <h2>风险点位榜与时间线</h2>
+        <span class="kicker">按近三十天现场记录排</span>
+      </div>
+      <div class="grid-2">
+        <div>
+          <ol class="rank">
+            <li><a href="/#latest">体育中心东门交汇口</a><span class="v">5.4 人/㎡</span></li>
+            <li><a href="/#latest">地铁西站扶梯入口</a><span class="v">4.6 人/㎡</span></li>
+            <li><a href="/#latest">音乐节内场出场口</a><span class="v">4.4 人/㎡</span></li>
+            <li><a href="/#latest">灯会主通道中段</a><span class="v">3.9 人/㎡</span></li>
+            <li><a href="/#latest">体育中心北侧台阶</a><span class="v">3.5 人/㎡</span></li>
+          </ol>
+          <p class="side-note">密度为 11 月 6 日现场估算，采用 1 米见方人数折算，非仪器测量。</p>
+        </div>
+        <ul class="timeline">
+          <li><time>10-12</time><div><b>评估表改口径</b><p>出口宽度按最窄处计。</p></div></li>
+          <li><time>10-22</time><div><b>灯会立牌试点</b><p>逆行投诉 27 → 9 条。</p></div></li>
+          <li><time>10-29</time><div><b>内场取消二次放行</b><p>出口 3 个恢复为 5 个。</p></div></li>
+          <li><time>11-04</time><div><b>西站围栏延长</b><p>站台滞留 380 → 210 人。</p></div></li>
+          <li><time>11-06</time><div><b>东门单向限流</b><p>出入口 6 处减为 4 处。</p></div></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 相关推荐 -->
+    <section class="block" id="related">
+      <div class="block-head">
+        <h2>相关推荐</h2>
+        <span class="kicker">按关键词继续找</span>
+      </div>
+      <div class="tags-rel">
+        <a href="/#deep">人群密度阈值 4 人/㎡</a>
+        <a href="/#deep">出口有效宽度怎么算</a>
+        <a href="/#guide">蛇形围栏长度与缓冲带</a>
+        <a href="/#faq">站立区内场挤压原因</a>
+        <a href="/#latest">地铁早高峰限流点位图</a>
+        <a href="/#guide">被挤在人流中间的站姿</a>
+        <a href="/#news">场馆安全评估表修订</a>
+        <a href="/#voices">灯会单行道逆行投诉</a>
+        <a href="/#rank">近三十天风险点位榜</a>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 侧栏 -->
+  <aside class="side" aria-label="侧栏导航与快讯">
+    <div class="side-card">
+      <h3>本页导航</h3>
+      <ul class="side-nav" id="sideNav">
+        <li><a href="/#overview">领域概览</a></li>
+        <li><a href="/#picks">精选内容推荐</a></li>
+        <li><a href="/#latest">最新更新</a></li>
+        <li><a href="/#channels">分类入口</a></li>
+        <li><a href="/#deep">深度解析</a></li>
+        <li><a href="/#guide" class="side-child">体验指南五步</a></li>
+        <li><a href="/#faq">常见问题</a></li>
+        <li><a href="/#voices">用户评论</a></li>
+        <li><a href="/#news">相关资讯</a></li>
+        <li><a href="/#rank">风险点位榜与时间线</a></li>
+        <li><a href="/#related">相关推荐</a></li>
+      </ul>
+    </div>
+    <div class="side-card">
+      <h3>现场速记</h3>
+      <ul class="mini" style="list-style:none;padding:0">
+        <li>东门开得慢 12 分钟，滞留涨 600 人。</li>
+        <li>西站围栏 42 米，站台少站 170 人。</li>
+        <li>低位立牌夜间可见，逆行仍集中在摊贩侧。</li>
+        <li>评估表 10-12 起按最窄处计宽。</li>
+      </ul>
+      <p class="side-note">条目为示例数据，具体以各场馆与运营方公示为准。</p>
+    </div>
+    <div class="side-card">
+      <h3>入口</h3>
+      <ul class="mini" style="list-style:none;padding:0">
+        <li><a href="/#deep">读唯一主体判断</a></li>
+        <li><a href="/#guide">到场五分钟清单</a></li>
+        <li><a href="/#faq">常见六问</a></li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <div class="f-brand">
+          <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true">
+            <rect width="64" height="64" rx="14" fill="#2b4157"/>
+            <path d="M13 45 L26 21 L34 33 L40 25 L51 45" stroke="#e8a13a" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>踩踏</span>
+        </div>
+        <p class="f-pos">把人群密度、出口宽度与开放时刻放在一张表里，记录现场可核对的那部分。</p>
+      </div>
+      <div>
+        <h4>场景栏目</h4>
+        <ul>
+          <li><a href="/#deep">体育场散场</a></li>
+          <li><a href="/#deep">地铁早高峰限流</a></li>
+          <li><a href="/#guide">演出内场挤压</a></li>
+          <li><a href="/#news">节庆灯会人流</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>方法与规则</h4>
+        <ul>
+          <li><a href="/#overview">人群密度分级</a></li>
+          <li><a href="/#faq">出口有效宽度</a></li>
+          <li><a href="/#guide">蛇形围栏缓冲带</a></li>
+          <li><a href="/#news">场馆评估表修订</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>阅读与反馈</h4>
+        <ul>
+          <li><a href="/#voices">用户评论</a></li>
+          <li><a href="/#rank">风险点位榜</a></li>
+          <li><a href="/#related">相关推荐</a></li>
+          <li><a href="/#latest">近三十天更新</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="base">
+      <span>示例数据说明：站内人数、密度、投诉条数多为现场估算或主办方公示口径，引用时请注明来源与测量方式。</span>
+      <span>更新时间 2026-11-08 · 对应更新项：11-06 东门单向限流、11-04 西站围栏延长。</span>
+    </div>
+    <div class="base">
+      <span>© 2026 踩踏 · 人群密度与安全疏散观察</span>
+      <span>内容以公开记录与现场观察为主，不构成安全评估结论。</span>
+    </div>
+  </div>
+</footer>
+
+<button id="toTop" aria-label="回到顶部">顶部</button>
+
+<script>
+(function(){
+  var menuBtn=document.getElementById('menuBtn');
+  var nav=document.getElementById('mainNav');
+  if(menuBtn&&nav){
+    menuBtn.addEventListener('click',function(){
+      var open=nav.classList.toggle('open');
+      menuBtn.setAttribute('aria-expanded',open?'true':'false');
+    });
+    nav.addEventListener('click',function(e){
+      if(e.target.tagName==='A'&&window.matchMedia('(max-width:720px)').matches){
+        nav.classList.remove('open');
+        menuBtn.setAttribute('aria-expanded','false');
+      }
+    });
+  }
+
+  var toTop=document.getElementById('toTop');
+  window.addEventListener('scroll',function(){
+    if(window.scrollY>520){toTop.classList.add('on');}else{toTop.classList.remove('on');}
+  },{passive:true});
+  toTop.addEventListener('click',function(){
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  /* 侧栏滚动高亮 */
+  var links=Array.prototype.slice.call(document.querySelectorAll('#sideNav a'));
+  var sections=links.map(function(a){
+    var id=a.getAttribute('href').replace('/#','');
+    return document.getElementById(id);
+  }).filter(Boolean);
+  if('IntersectionObserver' in window && sections.length){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){
+          links.forEach(function(a){a.classList.remove('active');});
+          var match=links.filter(function(a){return a.getAttribute('href')==='/#en.target.id';});
+          links.forEach(function(a){
+            if(a.getAttribute('href')==='#'+en.target.id||a.getAttribute('href')==='/# '+en.target.id){}
+          });
+          links.forEach(function(a){
+            if(a.getAttribute('href').slice(-en.target.id.length-1)==='#'+en.target.id){a.classList.add('active');}
+          });
+        }
+      });
+    },{rootMargin:'-140px 0px -60% 0px',threshold:0});
+    sections.forEach(function(s){io.observe(s);});
+  }
+
+  /* 本地搜索 */
+  var input=document.getElementById('siteSearch');
+  var out=document.getElementById('searchOut');
+  var items=[];
+  document.querySelectorAll('main h2, main h3, main summary, .tags-rel a, .chips a, .rank a, .list-plain a').forEach(function(el){
+    var text=(el.textContent||'').trim().replace(/\s+/g,' ');
+    if(!text)return;
+    var target=el.closest('section[id]')?('#'+el.closest('section[id]').id):'#main';
+    items.push({t:text,id:target});
+  });
+  var seen={};
+  items=items.filter(function(it){
+    if(seen[it.t])return false;seen[it.t]=1;return true;
+  });
+
+  function render(q){
+    q=(q||'').trim();
+    if(!q){out.classList.remove('on');out.innerHTML='';return;}
+    var res=items.filter(function(it){return it.t.toLowerCase().indexOf(q.toLowerCase())>-1;}).slice(0,8);
+    if(!res.length){
+      out.innerHTML='<div class="empty">没有匹配的条目，换个词试试：出口宽度、灯会、西站。</div>';
+    }else{
+      out.innerHTML=res.map(function(it){
+        return '<a href="/'+it.id+'">'+it.t.replace(/</g,'&lt;')+'</a>';
+      }).join('');
+    }
+    out.classList.add('on');
+  }
+  input.addEventListener('input',function(){render(input.value);});
+  input.addEventListener('focus',function(){if(input.value)render(input.value);});
+  input.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){out.classList.remove('on');input.blur();}
+    if(e.key==='Enter'){
+      var first=out.querySelector('a');
+      if(first){window.location.href=first.getAttribute('href');}
+    }
+  });
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('.search')){out.classList.remove('on');}
+  });
+})();
+</script>
+
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"WebSite",
+  "name":"踩踏",
+  "description":"人群密度与安全疏散观察站，记录场馆核定容量、出口有效宽度、限流时刻与现场亲历者叙述。",
+  "inLanguage":"zh-CN"
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"FAQPage",
+  "mainEntity":[
+    {"@type":"Question","name":"人群密度多少算危险？","acceptedAnswer":{"@type":"Answer","text":"人群密度超过 4 人/㎡ 时肩部开始持续接触；到 5 人/㎡ 以上个人无法自主决定行进方向。数一米见方内能站几个人，成年人站 3 人已算紧。"}},
+    {"@type":"Question","name":"体育场散场为什么先堵内场？","acceptedAnswer":{"@type":"Answer","text":"内场多为平地站立区，椅子拆除慢，观众回头拍照，出口数量又少于看台。10 月 30 日加赛内场出口只有 3 个，恢复成 5 个后滞留明显下降。"}},
+    {"@type":"Question","name":"地铁早高峰限流是怎么定的？","acceptedAnswer":{"@type":"Answer","text":"按站台可容纳人数与扶梯通过率确定。西站把蛇形围栏延长到 42 米，目的是把到达站台的节奏拉平，避免一波同时挤上扶梯。"}},
+    {"@type":"Question","name":"灯会单行道标识为什么常失效？","acceptedAnswer":{"@type":"Answer","text":"地面箭头在夜间几乎看不见，高位指示牌容易被灯笼遮挡。10 月 22 日改低位立牌后，逆行投诉从 27 条降到 9 条。"}},
+    {"@type":"Question","name":"被挤在人流中间该怎么站？","acceptedAnswer":{"@type":"Answer","text":"双手在胸前交握留出呼吸空间，不弯腰捡东西，不逆行，跟随人流斜向靠边。贴到围栏时顺着围栏侧移比正面推更有效。"}},
+    {"@type":"Question","name":"场馆核定容量能不能信？","acceptedAnswer":{"@type":"Answer","text":"核定容量是按面积与出口能力算出的上限，但散场效率取决于出口实际开放数与有效宽度。容量数字要配出口时刻表一起看。"}}
+  ]
+}
+</script>
+</body>
+              </html>
